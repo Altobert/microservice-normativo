@@ -14,6 +14,7 @@ import java.nio.file.Paths;
 
 @Service
 public class LuceneIndexer {
+    
     private final String indexDir = "path/to/index";
 
     public void indexFile(String fileName, String content) throws IOException {

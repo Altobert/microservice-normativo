@@ -1,7 +1,7 @@
 package cl.sii.normativo.loadnormas.controller;
 
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
-
+import org.apache.lucene.document.Document;
 import org.apache.lucene.index.DirectoryReader;
 import org.apache.lucene.queryparser.classic.QueryParser;
 
@@ -18,7 +18,11 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/search")
 public class SearchController {
-    private final String indexDir = "path/to/index";
+
+    //private final String indexDir = "path/to/index";
+    //appled to the same path as in LuceneIndexer.java
+    //private final String indexDir = "C:\\Users\\Usuario\\Documents\\index";
+    private final String indexDir = "C:\\Users\\alberto.sanmartin\\ProyectosNormativos\\index";
 
     @GetMapping
     public List<String> search(@RequestParam("query") String queryStr) throws Exception {
@@ -30,6 +34,15 @@ public class SearchController {
             IndexSearcher searcher = new IndexSearcher(reader);
             QueryParser parser = new QueryParser("content", new StandardAnalyzer());            
             Query query = parser.parse(queryStr);
+
+            for (var hit : searcher.search(query, 10).scoreDocs) {
+                try {
+                    Document doc = searcher.doc(hit.doc);
+                    results.add(doc.get("filename"));
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+            }
             
             /*searcher.search(query, 10).scoreDocs
                     .forEach(hit -> {
