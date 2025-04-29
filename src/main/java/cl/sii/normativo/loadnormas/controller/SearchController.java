@@ -22,7 +22,8 @@ public class SearchController {
     //private final String indexDir = "path/to/index";
     //appled to the same path as in LuceneIndexer.java
     //private final String indexDir = "C:\\Users\\Usuario\\Documents\\index";
-    private final String indexDir = "C:\\Users\\alberto.sanmartin\\ProyectosNormativos\\index";
+    //private final String indexDir = "C:\\Users\\alberto.sanmartin\\ProyectosNormativos\\index";
+    private final String indexDir = "/Users/albertosanmartin/usach-memoria-implementacion/desarrollo/proyecto-normativo-ms/microservice-normativo/normativo-indice/indice";
 
     @GetMapping
     public List<String> search(@RequestParam("query") String queryStr) throws Exception {

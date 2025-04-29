@@ -16,9 +16,6 @@ import org.springframework.web.multipart.MultipartFile;
 import cl.sii.normativo.loadnormas.services.LuceneIndexer;
 import cl.sii.normativo.loadnormas.services.PDFTextExtractor;
 
-import org.apache.pdfbox.pdmodel.PDDocument;
-import org.apache.pdfbox.text.PDFTextStripper;
-
 
 @RestController
 @RequestMapping("/api/documents")
