@@ -48,16 +48,7 @@ public class SearchController {
                     e.printStackTrace();
                 }
             }
-            
-            /*searcher.search(query, 10).scoreDocs
-                    .forEach(hit -> {
-                        try {
-                            Document doc = searcher.doc(hit.doc);
-                            results.add(doc.get("filename"));
-                        } catch (Exception e) {
-                            e.printStackTrace();
-                        }
-            });*/
+                        
         }
         return results;
     }
