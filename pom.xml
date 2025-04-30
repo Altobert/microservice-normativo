@@ -12,7 +12,7 @@
 	<artifactId>loadnormas</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>loadnormas</name>
-	<description>proyecto para carga de normativas y consulta de parametros</description>
+	<description>proyecto que permite buscar proyectos normativos de acuerdo a texto completo y ademas experimienta con chatIA</description>
 	<url/>
 	<licenses>
 		<license/>

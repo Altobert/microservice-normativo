@@ -19,11 +19,11 @@ import java.util.List;
 @RequestMapping("/api/search")
 public class SearchController {
 
-    //private final String indexDir = "path/to/index";
+    private final String indexDir = "path/to/index";
     //appled to the same path as in LuceneIndexer.java
     //private final String indexDir = "C:\\Users\\Usuario\\Documents\\index";
     //private final String indexDir = "C:\\Users\\alberto.sanmartin\\ProyectosNormativos\\index";
-    private final String indexDir = "/Users/albertosanmartin/usach-memoria-implementacion/desarrollo/proyecto-normativo-ms/microservice-normativo/normativo-indice/indice";
+    //private final String indexDir = "/Users/albertosanmartin/usach-memoria-implementacion/desarrollo/proyecto-normativo-ms/microservice-normativo/normativo-indice/indice";
 
     @GetMapping
     public List<String> search(@RequestParam("query") String queryStr) throws Exception {
@@ -36,6 +36,10 @@ public class SearchController {
             QueryParser parser = new QueryParser("content", new StandardAnalyzer());            
             Query query = parser.parse(queryStr);
 
+            /*
+             * Realiza la búsqueda y obtiene los documentos que coinciden con la consulta
+             * searcher.search(query, 10).scoreDocs.forEach(hit -> { try { Document doc =
+             */
             for (var hit : searcher.search(query, 10).scoreDocs) {
                 try {
                     Document doc = searcher.doc(hit.doc);

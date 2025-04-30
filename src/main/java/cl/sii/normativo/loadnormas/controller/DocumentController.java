@@ -1,7 +1,7 @@
 package cl.sii.normativo.loadnormas.controller;
 
-
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,8 +26,7 @@ public class DocumentController {
     }
 
     @PostMapping("/upload")
-    //@RequestParam("file")
-    public ResponseEntity<String> uploadPDF(@RequestBody MultipartFile file) {
+    public ResponseEntity<String> uploadPDF(@RequestParam("file") MultipartFile file) {
         try {
             // Extraer texto del PDF
             String content = PDFTextExtractor.extractText(file.getInputStream());
