@@ -24,6 +24,18 @@ public class LuceneIndexer {
             Document document = new Document();
             document.add(new TextField("filename", fileName, TextField.Store.YES));
             document.add(new TextField("content", content, TextField.Store.YES));
+            document.add(new TextField("path", indexDir, TextField.Store.YES));
+            document.add(new TextField("lastModified", String.valueOf(System.currentTimeMillis()), TextField.Store.YES));
+            document.add(new TextField("size", String.valueOf(content.length()), TextField.Store.YES));
+            document.add(new TextField("type", "pdf", TextField.Store.YES)); // Assuming all files are PDFs
+            //document.add(new TextField("author", "Unknown", TextField.Store.YES)); // Placeholder for author
+            document.add(new TextField("title", fileName, TextField.Store.YES)); // Placeholder for title
+            document.add(new TextField("description", "No description available", TextField.Store.YES)); // Placeholder for description
+            document.add(new TextField("keywords", "none", TextField.Store.YES)); // Placeholder for keywords
+            document.add(new TextField("language", "es", TextField.Store.YES)); // Assuming Spanish as default language
+            document.add(new TextField("createdDate", String.valueOf(System.currentTimeMillis()), TextField.Store.YES)); // Placeholder for created date
+            // Add other fields as necessary
+            
             writer.addDocument(document);
         }
     }

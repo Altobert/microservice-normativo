@@ -16,6 +16,7 @@ import cl.sii.normativo.loadnormas.services.PDFTextExtractor;
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
+    
     // Dependencia a la clase LuceneIndexer para indexar documentos
     // y realizar búsquedas
     @Autowired
