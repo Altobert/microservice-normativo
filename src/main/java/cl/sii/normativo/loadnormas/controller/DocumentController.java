@@ -12,7 +12,6 @@ import org.springframework.web.multipart.MultipartFile;
 import cl.sii.normativo.loadnormas.services.LuceneIndexer;
 import cl.sii.normativo.loadnormas.services.PDFTextExtractor;
 
-
 @RestController
 @RequestMapping("/api/documents")
 public class DocumentController {
