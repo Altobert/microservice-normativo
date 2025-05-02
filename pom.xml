@@ -52,6 +52,12 @@
 			<artifactId>spring-security-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+
+		<dependency>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-analyzers-common</artifactId>
+			<version>9.0.0</version>
+		</dependency>
 		-->		
 		
 		<dependency>
@@ -60,6 +66,16 @@
 		</dependency>
 		
 		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
+
+		<!-- lombok -->
+		<dependency>
+			<groupId>org.projectlombok</groupId>
+			<artifactId>lombok</artifactId>
+			<version>1.18.28</version>
+			<scope>provided</scope>
+		</dependency>
+	
+
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
