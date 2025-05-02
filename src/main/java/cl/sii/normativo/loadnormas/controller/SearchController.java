@@ -44,6 +44,11 @@ public class SearchController {
                 try {
                     Document doc = searcher.doc(hit.doc);
                     results.add(doc.get("filename"));
+                    results.add(doc.get("title"));
+                    results.add(doc.get("content"));
+                    results.add(doc.get("path"));
+                    results.add(doc.get("lastModified"));
+                    results.add(doc.get("size"));
                 } catch (Exception e) {
                     e.printStackTrace();
                 }
