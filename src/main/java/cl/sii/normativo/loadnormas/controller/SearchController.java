@@ -27,7 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
-@RequestMapping("/api/search")
+@RequestMapping("/api")
 public class SearchController {
 
     private final String indexDir = "path/to/index";        
@@ -40,7 +40,7 @@ public class SearchController {
      * @return Una lista de documentos que coinciden con la consulta.
      * @throws Exception Si hay un error al abrir el índice o al realizar la búsqueda.
      */
-    @GetMapping    
+    @GetMapping("/search")    
     public List<ResponseLuceneCorpus> search(@RequestParam("query") String queryStr) throws Exception {        
         List<ResponseLuceneCorpus> responseList = new ArrayList<>();
         
@@ -86,7 +86,7 @@ public class SearchController {
      * @throws ParseException Si hay un error al analizar la consulta.
      */    
     @GetMapping("/document")
-    public List<Document> searchDocumentsOnIndex(@RequestParam("query") String queryStr ) throws ParseException {
+    public List<Document> searchDocumentsOnIndex(@RequestParam("queryStr") String queryStr ) throws ParseException {
         try {
             
             Directory dir = FSDirectory.open(Paths.get(indexDir));
@@ -100,13 +100,11 @@ public class SearchController {
             TopDocs topDocs = searcher.search(query, 10, new Sort());
             //TopDocs topDocs = searcher.search(query, 10, sort);            
             // Con estos parametros se busca el documento por contenido.
-            //TopDocs topDocs = searcher.search(query, 10, new Sort("content"));
-            
+            //TopDocs topDocs = searcher.search(query, 10, new Sort("content"));            
             List<Document> documents = new ArrayList<>();
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
                 documents.add(searcher.doc(scoreDoc.doc));
             }
-
             return documents;
         } catch (IOException e) {
             e.printStackTrace();
