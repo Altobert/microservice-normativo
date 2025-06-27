@@ -14,25 +14,26 @@ import org.apache.lucene.search.Sort;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import cl.sii.normativo.loadnormas.dto.ResponseLuceneCorpus;
 
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 
 
 @RestController
 @RequestMapping("/api")
 public class SearchController {
 
-    private final String indexDir = "path/to/index";        
-    //private final String indexDir = "C:\Users\alberto.sanmartin\ProyectosNormativos\index";
-    //private final String indexDir = "/Users/albertosanmartin/usach-memoria-implementacion/desarrollo/proyecto-normativo-ms/microservice-normativo/normativo-indice/indice";
+    private final String indexDir = "path/to/index";     
 
     /**
      * Método para buscar documentos en el índice de Lucene.
@@ -40,6 +41,7 @@ public class SearchController {
      * @return Una lista de documentos que coinciden con la consulta.
      * @throws Exception Si hay un error al abrir el índice o al realizar la búsqueda.
      */
+    
     @GetMapping("/search")    
     public List<ResponseLuceneCorpus> search(@RequestParam("query") String queryStr) throws Exception {        
         List<ResponseLuceneCorpus> responseList = new ArrayList<>();
@@ -112,5 +114,53 @@ public class SearchController {
         return null;
 
     }
+
+    public String buscarRutaDocumento(String id) {
+        // Usás Lucene para buscar por ID u otro campo
+        // y devolver la ruta física o lógica del archivo
+        // Aquí podrías abrir el índice y buscar el campo 'path'
+        ///Users/albertosanmartin/usach-memoria-implementacion/proyectos-normativos/Normas_Instrucciones_SII/2016
+        //return "/ruta/a/documentos/documento_" + id + ".pdf";
+        return "/Users/albertosanmartin/usach-memoria-implementacion/proyectos-normativos/Normas_Instrucciones_SII/2016/"+id;
+    }
+
+    @GetMapping("/document/{id}")
+    public String getDocumentPath(@PathVariable String id) {
+        // Aquí podrías implementar la lógica para buscar el documento por ID
+        // y devolver su ruta
+        return buscarRutaDocumento(id);
+    }
+
+    @GetMapping(value = "/documento/{id}", produces = MediaType.APPLICATION_PDF_VALUE)
+public ResponseEntity<byte[]> obtenerDocumento(@PathVariable String id) throws IOException {
+    String ruta = buscarRutaDocumento(id);  // este método usa Lucene
+    Path path = Paths.get(ruta);
+
+    byte[] contenido = Files.readAllBytes(path);
+
+    return ResponseEntity.ok()
+            .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
+            .body(contenido);
+    }
+
+    @GetMapping("/documento")
+    public ResponseEntity<byte[]> obtenerDocumentoPorConsulta(@RequestParam("query") String queryStr) throws Exception {
+        List<ResponseLuceneCorpus> results = search(queryStr);
+        if (results.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        
+        // Asumiendo que quieres el primer resultado
+        String ruta = results.get(0).getPath();
+        Path path = Paths.get(ruta);
+        
+        byte[] contenido = Files.readAllBytes(path);
+        
+        return ResponseEntity.ok()
+                .header(HttpHeaders.CONTENT_DISPOSITION, "inline; filename=\"" + path.getFileName() + "\"")
+                .body(contenido);
+    }
+
+
 
 }
