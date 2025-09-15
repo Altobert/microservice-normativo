@@ -3,8 +3,10 @@ package cl.sii.normativo.loadnormas.services;
 import org.apache.lucene.analysis.standard.StandardAnalyzer;
 import org.apache.lucene.document.Document;
 import org.apache.lucene.document.TextField;
+import org.apache.lucene.document.StringField;
 import org.apache.lucene.index.IndexWriter;
 import org.apache.lucene.index.IndexWriterConfig;
+import org.apache.lucene.index.Term;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
 import org.springframework.beans.factory.annotation.Value;
@@ -26,9 +28,11 @@ public class BulkIndexerService {
     private String indexDir;
     
     private final PDFTextExtractor pdfTextExtractor;
+    private final LuceneIndexer luceneIndexer;
     
-    public BulkIndexerService(PDFTextExtractor pdfTextExtractor) {
+    public BulkIndexerService(PDFTextExtractor pdfTextExtractor, LuceneIndexer luceneIndexer) {
         this.pdfTextExtractor = pdfTextExtractor;
+        this.luceneIndexer = luceneIndexer;
     }
     
     /**
@@ -61,7 +65,7 @@ public class BulkIndexerService {
         List<String> errors = new ArrayList<>();
         
         try (Directory dir = FSDirectory.open(indexPath);
-             IndexWriter writer = new IndexWriter(dir, new IndexWriterConfig(new StandardAnalyzer()))) {
+             IndexWriter writer = new IndexWriter(dir, createIndexWriterConfig())) {
             
             for (File pdfFile : pdfFiles) {
                 try {
@@ -70,11 +74,10 @@ public class BulkIndexerService {
                     // Extraer texto del PDF
                     String content = pdfTextExtractor.extractText(new java.io.FileInputStream(pdfFile));
                     
-                    // Crear documento de Lucene
+                    // Crear documento con deduplicación usando el mismo writer
                     Document document = createDocument(pdfFile, content);
-                    
-                    // Agregar al índice
-                    writer.addDocument(document);
+                    Term term = new Term("filename", pdfFile.getName());
+                    writer.updateDocument(term, document);
                     
                     successCount.incrementAndGet();
                     System.out.println("✅ Indexado exitoso: " + pdfFile.getName());
@@ -123,28 +126,28 @@ public class BulkIndexerService {
     private Document createDocument(File pdfFile, String content) {
         Document document = new Document();
         
-        // Información básica del archivo
-        document.add(new TextField("filename", pdfFile.getName(), TextField.Store.YES));
-        document.add(new TextField("filepath", pdfFile.getAbsolutePath(), TextField.Store.YES));
+        // Información básica del archivo - usar StringField para evitar duplicados
+        document.add(new StringField("filename", pdfFile.getName(), TextField.Store.YES));
+        document.add(new StringField("filepath", pdfFile.getAbsolutePath(), TextField.Store.YES));
         document.add(new TextField("content", content, TextField.Store.YES));
         
         // Metadatos adicionales
-        document.add(new TextField("size", String.valueOf(pdfFile.length()), TextField.Store.YES));
-        document.add(new TextField("lastModified", String.valueOf(pdfFile.lastModified()), TextField.Store.YES));
-        document.add(new TextField("type", "pdf", TextField.Store.YES));
-        document.add(new TextField("language", "es", TextField.Store.YES));
-        document.add(new TextField("createdDate", String.valueOf(System.currentTimeMillis()), TextField.Store.YES));
+        document.add(new StringField("size", String.valueOf(pdfFile.length()), TextField.Store.YES));
+        document.add(new StringField("lastModified", String.valueOf(pdfFile.lastModified()), TextField.Store.YES));
+        document.add(new StringField("type", "pdf", TextField.Store.YES));
+        document.add(new StringField("language", "es", TextField.Store.YES));
+        document.add(new StringField("createdDate", String.valueOf(System.currentTimeMillis()), TextField.Store.YES));
         
         // Extraer año del directorio padre si es posible
         String year = extractYearFromPath(pdfFile.getAbsolutePath());
         if (year != null) {
-            document.add(new TextField("year", year, TextField.Store.YES));
+            document.add(new StringField("year", year, TextField.Store.YES));
         }
         
         // Extraer ID del nombre del archivo si es posible
         String documentId = extractDocumentId(pdfFile.getName());
         if (documentId != null) {
-            document.add(new TextField("documentId", documentId, TextField.Store.YES));
+            document.add(new StringField("documentId", documentId, TextField.Store.YES));
         }
         
         // Generar título del documento
@@ -225,5 +228,14 @@ public class BulkIndexerService {
         public String toString() {
             return String.format("Indexación completada: %d exitosos, %d errores", successCount, errorCount);
         }
+    }
+    
+    /**
+     * Crea una configuración optimizada para IndexWriter
+     */
+    private IndexWriterConfig createIndexWriterConfig() {
+        IndexWriterConfig config = new IndexWriterConfig(new StandardAnalyzer());
+        config.setOpenMode(IndexWriterConfig.OpenMode.CREATE_OR_APPEND);
+        return config;
     }
 }

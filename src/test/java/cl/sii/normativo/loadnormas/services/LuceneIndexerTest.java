@@ -60,7 +60,7 @@ class LuceneIndexerTest {
         String content = "Este es un documento de prueba con contenido importante sobre impuestos.";
 
         // Act
-        luceneIndexer.indexFile(fileName, content, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
 
         // Assert - Verificar que el documento se indexó correctamente
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -83,8 +83,8 @@ class LuceneIndexerTest {
         String content2 = "Segundo documento sobre servicios públicos.";
 
         // Act
-        luceneIndexer.indexFile(fileName1, content1, testDirectory);
-        luceneIndexer.indexFile(fileName2, content2, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName1, content1, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName2, content2, testDirectory);
 
         // Assert
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -109,7 +109,7 @@ class LuceneIndexerTest {
         String content = "";
 
         // Act
-        luceneIndexer.indexFile(fileName, content, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
 
         // Assert
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -128,7 +128,7 @@ class LuceneIndexerTest {
         String content = "Documento con caracteres especiales: áéíóú ñü ç @#$%^&*()";
 
         // Act
-        luceneIndexer.indexFile(fileName, content, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
 
         // Assert
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -151,7 +151,7 @@ class LuceneIndexerTest {
         String content = largeContent.toString();
 
         // Act
-        luceneIndexer.indexFile(fileName, content, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
 
         // Assert
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -172,7 +172,7 @@ class LuceneIndexerTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            luceneIndexer.indexFile(fileName, content, testDirectory);
+            luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
         });
     }
 
@@ -184,16 +184,16 @@ class LuceneIndexerTest {
 
         // Act & Assert
         assertThrows(IllegalArgumentException.class, () -> {
-            luceneIndexer.indexFile(fileName, content, testDirectory);
+            luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
         });
     }
 
     @Test
     void testSearchFunctionality() throws IOException, ParseException {
         // Arrange - Indexar documentos de prueba
-        luceneIndexer.indexFile("doc1.pdf", "Documento sobre impuestos internos y IVA", testDirectory);
-        luceneIndexer.indexFile("doc2.pdf", "Información sobre servicios públicos y contribuyentes", testDirectory);
-        luceneIndexer.indexFile("doc3.pdf", "Normativa fiscal y tributaria", testDirectory);
+        luceneIndexer.indexFileForTesting("doc1.pdf", "Documento sobre impuestos internos y IVA", testDirectory);
+        luceneIndexer.indexFileForTesting("doc2.pdf", "Información sobre servicios públicos y contribuyentes", testDirectory);
+        luceneIndexer.indexFileForTesting("doc3.pdf", "Normativa fiscal y tributaria", testDirectory);
 
         // Act - Realizar búsqueda
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {

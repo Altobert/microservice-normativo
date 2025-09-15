@@ -73,7 +73,7 @@ class DocumentIntegrationTest {
         String extractedText = pdfContent; // Simulamos que ya tenemos el texto extraído
 
         // 2. Indexar el documento
-        luceneIndexer.indexFile(fileName, extractedText, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, extractedText, testDirectory);
 
         // Assert - Verificar que el documento se indexó correctamente
         try (DirectoryReader reader = DirectoryReader.open(testDirectory)) {
@@ -105,7 +105,7 @@ class DocumentIntegrationTest {
 
         // Indexar documentos
         for (int i = 0; i < fileNames.length; i++) {
-            luceneIndexer.indexFile(fileNames[i], contents[i], testDirectory);
+            luceneIndexer.indexFileForTesting(fileNames[i], contents[i], testDirectory);
         }
 
         // Act - Realizar búsquedas
@@ -150,7 +150,7 @@ class DocumentIntegrationTest {
         // Act - Procesar cada documento
         for (int i = 0; i < documents.length; i++) {
             String fileName = "documento-" + (i + 1) + ".pdf";
-            luceneIndexer.indexFile(fileName, documents[i], testDirectory);
+            luceneIndexer.indexFileForTesting(fileName, documents[i], testDirectory);
         }
 
         // Assert - Verificar que todos los documentos se indexaron
@@ -194,7 +194,7 @@ class DocumentIntegrationTest {
 
         // Act - Medir tiempo de indexación
         long startTime = System.currentTimeMillis();
-        luceneIndexer.indexFile(fileName, content, testDirectory);
+        luceneIndexer.indexFileForTesting(fileName, content, testDirectory);
         long endTime = System.currentTimeMillis();
 
         // Assert - Verificar que se indexó correctamente y en tiempo razonable
