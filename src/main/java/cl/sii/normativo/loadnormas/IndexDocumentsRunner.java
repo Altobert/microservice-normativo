@@ -2,19 +2,22 @@ package cl.sii.normativo.loadnormas;
 
 import cl.sii.normativo.loadnormas.services.BulkIndexerService;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.SpringApplication;
+import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
 
-@Configuration
-public class IndexDocumentsScript {
-    
-    /**
-     * CommandLineRunner que solo se ejecuta cuando se activa el perfil 'index'
-     * o cuando se ejecuta explícitamente con argumentos de indexación
-     */
+/**
+ * Aplicación standalone para ejecutar la indexación de documentos
+ * Solo se ejecuta cuando se llama explícitamente
+ */
+@SpringBootApplication
+public class IndexDocumentsRunner {
+
+    public static void main(String[] args) {
+        SpringApplication.run(IndexDocumentsRunner.class, args);
+    }
+
     @Bean
-    @Profile("index")
     public CommandLineRunner indexDocuments(BulkIndexerService bulkIndexerService) {
         return args -> {
             System.out.println("🚀 Iniciando indexación de documentos SII...");
@@ -48,9 +51,13 @@ public class IndexDocumentsScript {
                 System.out.println("\n🎉 ¡Indexación completada!");
                 System.out.println("💡 Ahora puedes buscar documentos usando el endpoint /api/documents/search");
                 
+                // Terminar la aplicación después de la indexación
+                System.exit(0);
+                
             } catch (Exception e) {
                 System.err.println("❌ Error durante la indexación: " + e.getMessage());
                 e.printStackTrace();
+                System.exit(1);
             }
         };
     }

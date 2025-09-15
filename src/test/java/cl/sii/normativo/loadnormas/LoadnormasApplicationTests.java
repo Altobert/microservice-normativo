@@ -22,7 +22,6 @@ import org.apache.lucene.search.Query;
 import org.apache.lucene.queryparser.classic.QueryParser;
 import org.apache.lucene.queryparser.classic.ParseException;
 import org.apache.lucene.search.TopDocs;
-import org.springframework.boot.test.context.SpringBootTest;
 
 import org.apache.lucene.store.FSDirectory;
 import cl.sii.normativo.loadnormas.dto.ResponseLuceneCorpus;
@@ -33,7 +32,6 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-@SpringBootTest
 class LoadnormasApplicationTests  {
 
   private Directory indexDirectory;
