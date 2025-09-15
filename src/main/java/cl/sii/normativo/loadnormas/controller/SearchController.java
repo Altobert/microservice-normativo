@@ -15,6 +15,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.io.IOException;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -26,7 +28,6 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,6 +35,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 @RestController
 @RequestMapping("/api/search")
 @Tag(name = "Búsqueda de Documentos", description = "API para realizar búsquedas en el índice de documentos normativos")
+@Slf4j
 public class SearchController {
     
     @Value("${lucene.index.directory:path/to/index}")
@@ -98,6 +100,8 @@ public class SearchController {
             @Parameter(description = "Campo a buscar", example = "content")
             @RequestParam(defaultValue = "content") String field) {
         
+        log.info("Iniciando búsqueda de documentos - Query: '{}', Campo: '{}', Límite: {}", query, field, limit);
+        
         try {
             List<Map<String, Object>> results = performSearch(query, limit, field);
             
@@ -108,13 +112,13 @@ public class SearchController {
             response.put("totalResults", results.size());
             response.put("results", results);
             
+            log.info("Búsqueda completada exitosamente - {} resultados encontrados para query: '{}'", results.size(), query);
             return ResponseEntity.ok(response);
             
         } catch (IOException | ParseException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error en la búsqueda");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            log.error("Error durante la búsqueda de documentos - Query: '{}', Campo: '{}', Límite: {}", 
+                     query, field, limit, e);
+            return createErrorResponse("Error en la búsqueda", e.getMessage());
         }
     }
     
@@ -127,6 +131,8 @@ public class SearchController {
             @RequestParam String query,
             @RequestParam(defaultValue = "10") int limit) {
         
+        log.info("Iniciando búsqueda por año - Query: '{}', Año: '{}', Límite: {}", query, year, limit);
+        
         try {
             String yearQuery = query + " AND year:" + year;
             List<Map<String, Object>> results = performSearch(yearQuery, limit, "content");
@@ -138,13 +144,13 @@ public class SearchController {
             response.put("totalResults", results.size());
             response.put("results", results);
             
+            log.info("Búsqueda por año completada - {} resultados encontrados para query: '{}' en año: '{}'", results.size(), query, year);
             return ResponseEntity.ok(response);
             
         } catch (IOException | ParseException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error en la búsqueda por año");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            log.error("Error durante la búsqueda por año - Query: '{}', Año: '{}', Límite: {}", 
+                     query, year, limit, e);
+            return createErrorResponse("Error en la búsqueda por año", e.getMessage());
         }
     }
     
@@ -153,6 +159,8 @@ public class SearchController {
      */
     @GetMapping("/documents/id/{documentId}")
     public ResponseEntity<Map<String, Object>> searchDocumentById(@PathVariable String documentId) {
+        
+        log.info("Iniciando búsqueda por ID de documento - DocumentId: '{}'", documentId);
         
         try {
             String query = "documentId:" + documentId;
@@ -163,13 +171,12 @@ public class SearchController {
             response.put("totalResults", results.size());
             response.put("results", results);
             
+            log.info("Búsqueda por ID completada - {} resultados encontrados para DocumentId: '{}'", results.size(), documentId);
             return ResponseEntity.ok(response);
             
         } catch (IOException | ParseException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error en la búsqueda por ID");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            log.error("Error durante la búsqueda por ID - DocumentId: '{}'", documentId, e);
+            return createErrorResponse("Error en la búsqueda por ID", e.getMessage());
         }
     }
     
@@ -179,19 +186,25 @@ public class SearchController {
     private List<Map<String, Object>> performSearch(String queryString, int limit, String field) 
             throws IOException, ParseException {
         
+        log.debug("Ejecutando búsqueda en Lucene - Query: '{}', Campo: '{}', Límite: {}", queryString, field, limit);
+        
         List<Map<String, Object>> results = new ArrayList<>();
         
         try (Directory dir = FSDirectory.open(Paths.get(indexDir));
              DirectoryReader reader = DirectoryReader.open(dir)) {
+            
+            log.debug("Directorio de índice abierto: {}", indexDir);
+            log.debug("Número total de documentos en el índice: {}", reader.numDocs());
             
             IndexSearcher searcher = new IndexSearcher(reader);
             QueryParser parser = new QueryParser(field, new StandardAnalyzer());
             Query query = parser.parse(queryString);
             
             TopDocs topDocs = searcher.search(query, limit);
+            log.debug("Búsqueda ejecutada - {} documentos encontrados", topDocs.totalHits.value);
             
             for (ScoreDoc scoreDoc : topDocs.scoreDocs) {
-                Document doc = searcher.doc(scoreDoc.doc);
+                Document doc = searcher.storedFields().document(scoreDoc.doc);
                 
                 Map<String, Object> result = new HashMap<>();
                 result.put("score", scoreDoc.score);
@@ -212,9 +225,12 @@ public class SearchController {
                 }
                 
                 results.add(result);
+                log.debug("Documento procesado - ID: {}, Score: {}, Filename: {}", 
+                         doc.get("documentId"), scoreDoc.score, doc.get("filename"));
             }
         }
         
+        log.debug("Búsqueda completada - {} resultados procesados", results.size());
         return results;
     }
     
@@ -265,35 +281,55 @@ public class SearchController {
     })
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getIndexStats() {
+        log.info("Solicitando estadísticas del índice");
+        
         try {
             Map<String, Object> stats = new HashMap<>();
             
             try (Directory dir = FSDirectory.open(Paths.get(indexDir));
                  DirectoryReader reader = DirectoryReader.open(dir)) {
                 
-                stats.put("totalDocuments", reader.numDocs());
+                int totalDocs = reader.numDocs();
+                log.debug("Procesando estadísticas - Total documentos: {}", totalDocs);
+                
+                stats.put("totalDocuments", totalDocs);
                 stats.put("indexDirectory", indexDir);
                 stats.put("timestamp", System.currentTimeMillis());
                 
                 // Contar documentos por año
                 Map<String, Integer> yearCount = new HashMap<>();
-                for (int i = 0; i < reader.numDocs(); i++) {
-                    Document doc = reader.document(i);
+                for (int i = 0; i < totalDocs; i++) {
+                    Document doc = reader.storedFields().document(i);
                     String year = doc.get("year");
                     if (year != null) {
                         yearCount.put(year, yearCount.getOrDefault(year, 0) + 1);
                     }
                 }
                 stats.put("documentsByYear", yearCount);
+                
+                log.info("Estadísticas generadas exitosamente - {} documentos totales, {} años diferentes", 
+                        totalDocs, yearCount.size());
             }
             
             return ResponseEntity.ok(stats);
             
         } catch (IOException e) {
-            Map<String, Object> errorResponse = new HashMap<>();
-            errorResponse.put("error", "Error al obtener estadísticas");
-            errorResponse.put("message", e.getMessage());
-            return ResponseEntity.status(500).body(errorResponse);
+            log.error("Error al obtener estadísticas del índice", e);
+            return createErrorResponse("Error al obtener estadísticas", e.getMessage());
         }
+    }
+    
+    /**
+     * Crea una respuesta de error estandarizada usando SLF4J
+     */
+    private ResponseEntity<Map<String, Object>> createErrorResponse(String errorType, String message) {
+        log.debug("Creando respuesta de error - Tipo: '{}', Mensaje: '{}'", errorType, message);
+        
+        Map<String, Object> errorResponse = new HashMap<>();
+        errorResponse.put("error", errorType);
+        errorResponse.put("message", message);
+        errorResponse.put("timestamp", System.currentTimeMillis());
+        
+        return ResponseEntity.status(500).body(errorResponse);
     }
 }
