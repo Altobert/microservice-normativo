@@ -2,19 +2,21 @@ package cl.sii.normativo.loadnormas;
 
 import cl.sii.normativo.loadnormas.services.BulkIndexerService;
 import org.springframework.boot.CommandLineRunner;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
-@Configuration
+// @Configuration
 public class IndexDocumentsScript {
     
     /**
      * CommandLineRunner que solo se ejecuta cuando se activa el perfil 'index'
      * o cuando se ejecuta explícitamente con argumentos de indexación
      */
-    @Bean
-    @Profile("index")
+    // @Bean
+    // @Profile("index")
+    // @ConditionalOnProperty(name = "app.index.enabled", havingValue = "true", matchIfMissing = false)
     public CommandLineRunner indexDocuments(BulkIndexerService bulkIndexerService) {
         return args -> {
             System.out.println("🚀 Iniciando indexación de documentos SII...");

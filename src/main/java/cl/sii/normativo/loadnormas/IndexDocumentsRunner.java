@@ -10,14 +10,14 @@ import org.springframework.context.annotation.Bean;
  * Aplicación standalone para ejecutar la indexación de documentos
  * Solo se ejecuta cuando se llama explícitamente
  */
-@SpringBootApplication
+// @SpringBootApplication
 public class IndexDocumentsRunner {
 
     public static void main(String[] args) {
         SpringApplication.run(IndexDocumentsRunner.class, args);
     }
 
-    @Bean
+    // @Bean
     public CommandLineRunner indexDocuments(BulkIndexerService bulkIndexerService) {
         return args -> {
             System.out.println("🚀 Iniciando indexación de documentos SII...");
