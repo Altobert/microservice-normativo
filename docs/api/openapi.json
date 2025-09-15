@@ -1,0 +1,746 @@
+{
+  "openapi": "3.0.1",
+  "info": {
+    "title": "Microservicio Normativo SII",
+    "description": "API para búsqueda y gestión de documentos normativos del Servicio de Impuestos Internos (SII) utilizando Apache Lucene para indexación y búsqueda de texto completo.",
+    "version": "1.0.0",
+    "contact": {
+      "name": "Equipo de Desarrollo SII",
+      "email": "desarrollo@sii.cl"
+    },
+    "license": {
+      "name": "MIT",
+      "url": "https://opensource.org/licenses/MIT"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8080",
+      "description": "Servidor de desarrollo local"
+    },
+    {
+      "url": "https://api-normativo.sii.cl",
+      "description": "Servidor de producción"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Búsqueda de Documentos",
+      "description": "API para realizar búsquedas en el índice de documentos normativos"
+    },
+    {
+      "name": "Gestión de Documentos",
+      "description": "API para la gestión individual de documentos normativos"
+    },
+    {
+      "name": "Indexación Masiva",
+      "description": "API para realizar indexación masiva de documentos"
+    },
+    {
+      "name": "Sistema",
+      "description": "Endpoints de monitoreo y salud del sistema"
+    }
+  ],
+  "paths": {
+    "/api/search/documents": {
+      "get": {
+        "tags": ["Búsqueda de Documentos"],
+        "summary": "Buscar documentos",
+        "description": "Realiza una búsqueda de texto completo en el índice de documentos normativos",
+        "operationId": "searchDocuments",
+        "parameters": [
+          {
+            "name": "query",
+            "in": "query",
+            "description": "Término de búsqueda",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "IVA"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de resultados",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "example": 10
+          },
+          {
+            "name": "field",
+            "in": "query",
+            "description": "Campo a buscar",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "content",
+              "enum": ["content", "filename", "title", "documentId", "year"]
+            },
+            "example": "content"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Búsqueda realizada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchResponse"
+                },
+                "example": {
+                  "query": "IVA",
+                  "field": "content",
+                  "limit": 10,
+                  "totalResults": 2,
+                  "results": [
+                    {
+                      "score": 1.2345955,
+                      "filename": "ID1302_Tributacion_Regimen_ADM_IVA_Servicios_Extranjeros.pdf",
+                      "title": "Tributación Régimen ADM IVA Servicios Extranjeros",
+                      "filepath": "/Users/albertosanmartin/usach-memoria-implementacion/proyectos-normativos/Normas_Instrucciones_SII/2020/ID1302_Tributacion_Regimen_ADM_IVA_Servicios_Extranjeros.pdf",
+                      "year": "2020",
+                      "documentId": "ID1302",
+                      "size": "563916",
+                      "lastModified": "1728443774000",
+                      "snippet": "INSTRUCCIONES SOBRE TRIBUTACIÓN EN EL RÉGIMEN DE ADMINISTRACIÓN DE IMPUESTOS ADM IVA PARA SERVICIOS EXTRANJEROS..."
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error en la búsqueda",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Error en la búsqueda",
+                  "message": "Mensaje de error específico"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/documents/year/{year}": {
+      "get": {
+        "tags": ["Búsqueda de Documentos"],
+        "summary": "Buscar documentos por año",
+        "description": "Realiza una búsqueda de documentos filtrados por año específico",
+        "operationId": "searchDocumentsByYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "description": "Año de los documentos a buscar",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}$"
+            },
+            "example": "2020"
+          },
+          {
+            "name": "query",
+            "in": "query",
+            "description": "Término de búsqueda",
+            "required": true,
+            "schema": {
+              "type": "string"
+            },
+            "example": "impuesto"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "description": "Número máximo de resultados",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 10,
+              "minimum": 1,
+              "maximum": 100
+            },
+            "example": 10
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Búsqueda realizada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchByYearResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error en la búsqueda por año",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/documents/id/{documentId}": {
+      "get": {
+        "tags": ["Búsqueda de Documentos"],
+        "summary": "Buscar documento por ID",
+        "description": "Busca un documento específico por su ID único",
+        "operationId": "searchDocumentById",
+        "parameters": [
+          {
+            "name": "documentId",
+            "in": "path",
+            "description": "ID único del documento",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^ID\\d+$"
+            },
+            "example": "ID1302"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Documento encontrado exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SearchByIdResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error en la búsqueda por ID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/search/stats": {
+      "get": {
+        "tags": ["Búsqueda de Documentos"],
+        "summary": "Obtener estadísticas del índice",
+        "description": "Retorna información estadística sobre los documentos indexados en el sistema",
+        "operationId": "getIndexStats",
+        "responses": {
+          "200": {
+            "description": "Estadísticas obtenidas exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IndexStatsResponse"
+                },
+                "example": {
+                  "totalDocuments": 104,
+                  "indexDirectory": "path/to/index",
+                  "timestamp": 1757910350026,
+                  "documentsByYear": {
+                    "2019": 44,
+                    "2018": 55,
+                    "2017": 77,
+                    "2016": 352,
+                    "2024": 66,
+                    "2021": 242,
+                    "2020": 308
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error al obtener estadísticas",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/documents/upload": {
+      "post": {
+        "tags": ["Gestión de Documentos"],
+        "summary": "Subir y indexar documento PDF",
+        "description": "Permite subir un documento PDF individual y lo indexa en el sistema de búsqueda de Lucene",
+        "operationId": "uploadPDF",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary",
+                    "description": "Archivo PDF a indexar"
+                  }
+                },
+                "required": ["file"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Documento indexado exitosamente",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Documento indexado exitosamente."
+              }
+            }
+          },
+          "500": {
+            "description": "Error al procesar el documento",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                },
+                "example": "Error al indexar el documento: [mensaje de error]"
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/index-directory": {
+      "post": {
+        "tags": ["Indexación Masiva"],
+        "summary": "Indexar directorio completo",
+        "description": "Indexa todos los documentos PDF encontrados en un directorio específico",
+        "operationId": "indexDirectory",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "directoryPath": {
+                    "type": "string",
+                    "description": "Ruta del directorio a indexar",
+                    "example": "/Users/usuario/documentos"
+                  }
+                },
+                "required": ["directoryPath"]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Indexación completada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkIndexResponse"
+                },
+                "example": {
+                  "message": "Indexación masiva completada",
+                  "directory": "/Users/albertosanmartin/usach-memoria-implementacion/proyectos-normativos/Normas_Instrucciones_SII",
+                  "successCount": 104,
+                  "errorCount": 0,
+                  "errors": [],
+                  "totalProcessed": 104
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Directorio no válido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "error": "Directorio no válido",
+                  "message": "El directorio especificado no existe o no es accesible"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error de indexación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/index-sii-documents": {
+      "post": {
+        "tags": ["Indexación Masiva"],
+        "summary": "Indexar documentos SII por defecto",
+        "description": "Indexa documentos del directorio por defecto del SII",
+        "operationId": "indexSIIDocuments",
+        "responses": {
+          "200": {
+            "description": "Indexación completada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkIndexResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Directorio no válido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error de indexación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/index-year/{year}": {
+      "post": {
+        "tags": ["Indexación Masiva"],
+        "summary": "Indexar documentos de un año específico",
+        "description": "Indexa documentos de un año específico del directorio SII",
+        "operationId": "indexYear",
+        "parameters": [
+          {
+            "name": "year",
+            "in": "path",
+            "description": "Año de los documentos a indexar",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "pattern": "^\\d{4}$"
+            },
+            "example": "2020"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Indexación completada exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkIndexResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Directorio no válido",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Error de indexación",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/bulk/stats": {
+      "get": {
+        "tags": ["Indexación Masiva"],
+        "summary": "Obtener estadísticas del índice",
+        "description": "Retorna estadísticas básicas del índice de documentos",
+        "operationId": "getBulkIndexStats",
+        "responses": {
+          "200": {
+            "description": "Estadísticas obtenidas exitosamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "message": {
+                      "type": "string"
+                    },
+                    "indexDirectory": {
+                      "type": "string"
+                    },
+                    "timestamp": {
+                      "type": "integer",
+                      "format": "int64"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/actuator/health": {
+      "get": {
+        "tags": ["Sistema"],
+        "summary": "Health Check",
+        "description": "Verifica el estado de salud del microservicio",
+        "operationId": "healthCheck",
+        "responses": {
+          "200": {
+            "description": "Servicio funcionando correctamente",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "status": {
+                      "type": "string",
+                      "enum": ["UP", "DOWN"]
+                    }
+                  }
+                },
+                "example": {
+                  "status": "UP"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "SearchResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "Término de búsqueda utilizado"
+          },
+          "field": {
+            "type": "string",
+            "description": "Campo en el que se realizó la búsqueda"
+          },
+          "limit": {
+            "type": "integer",
+            "description": "Límite de resultados solicitado"
+          },
+          "totalResults": {
+            "type": "integer",
+            "description": "Número total de resultados encontrados"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentResult"
+            }
+          }
+        }
+      },
+      "SearchByYearResponse": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string"
+          },
+          "year": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "totalResults": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentResult"
+            }
+          }
+        }
+      },
+      "SearchByIdResponse": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string"
+          },
+          "totalResults": {
+            "type": "integer"
+          },
+          "results": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DocumentResult"
+            }
+          }
+        }
+      },
+      "DocumentResult": {
+        "type": "object",
+        "properties": {
+          "score": {
+            "type": "number",
+            "format": "float",
+            "description": "Puntuación de relevancia del documento"
+          },
+          "filename": {
+            "type": "string",
+            "description": "Nombre del archivo"
+          },
+          "title": {
+            "type": "string",
+            "description": "Título del documento"
+          },
+          "filepath": {
+            "type": "string",
+            "description": "Ruta completa del archivo"
+          },
+          "year": {
+            "type": "string",
+            "description": "Año del documento"
+          },
+          "documentId": {
+            "type": "string",
+            "description": "ID único del documento"
+          },
+          "size": {
+            "type": "string",
+            "description": "Tamaño del archivo en bytes"
+          },
+          "lastModified": {
+            "type": "string",
+            "description": "Fecha de última modificación en timestamp"
+          },
+          "snippet": {
+            "type": "string",
+            "description": "Fragmento del contenido del documento"
+          }
+        }
+      },
+      "IndexStatsResponse": {
+        "type": "object",
+        "properties": {
+          "totalDocuments": {
+            "type": "integer",
+            "description": "Número total de documentos indexados"
+          },
+          "indexDirectory": {
+            "type": "string",
+            "description": "Directorio donde se almacena el índice"
+          },
+          "timestamp": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Timestamp de la consulta"
+          },
+          "documentsByYear": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "description": "Conteo de documentos por año"
+          }
+        }
+      },
+      "BulkIndexResponse": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Mensaje de confirmación"
+          },
+          "directory": {
+            "type": "string",
+            "description": "Directorio que fue indexado"
+          },
+          "successCount": {
+            "type": "integer",
+            "description": "Número de documentos indexados exitosamente"
+          },
+          "errorCount": {
+            "type": "integer",
+            "description": "Número de documentos con errores"
+          },
+          "errors": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "Lista de errores encontrados"
+          },
+          "totalProcessed": {
+            "type": "integer",
+            "description": "Total de documentos procesados"
+          }
+        }
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Tipo de error"
+          },
+          "message": {
+            "type": "string",
+            "description": "Mensaje de error detallado"
+          }
+        }
+      }
+    }
+  }
+}
