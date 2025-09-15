@@ -10,8 +10,17 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/bulk")
+@Tag(name = "Indexación Masiva", description = "API para realizar indexación masiva de documentos")
 public class BulkIndexController {
     
     @Autowired
@@ -20,8 +29,59 @@ public class BulkIndexController {
     /**
      * Indexa todos los documentos PDF de un directorio específico
      */
+    @Operation(
+        summary = "Indexar directorio completo",
+        description = "Indexa todos los documentos PDF encontrados en un directorio específico"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Indexación completada exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "message": "Indexación masiva completada",
+                      "directory": "/ruta/al/directorio",
+                      "successCount": 100,
+                      "errorCount": 5,
+                      "errors": ["archivo1.pdf: Error de lectura", "archivo2.pdf: PDF corrupto"],
+                      "totalProcessed": 105
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Directorio no válido",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "error": "Directorio no válido",
+                      "message": "El directorio especificado no existe o no es accesible"
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error de indexación",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "error": "Error de indexación",
+                      "message": "Error interno del servidor durante la indexación"
+                    }
+                    """)
+            )
+        )
+    })
     @PostMapping("/index-directory")
-    public ResponseEntity<Map<String, Object>> indexDirectory(@RequestParam String directoryPath) {
+    public ResponseEntity<Map<String, Object>> indexDirectory(
+        @Parameter(description = "Ruta del directorio a indexar", required = true, example = "/Users/usuario/documentos")
+        @RequestParam String directoryPath) {
         try {
             System.out.println("🚀 Iniciando indexación masiva del directorio: " + directoryPath);
             

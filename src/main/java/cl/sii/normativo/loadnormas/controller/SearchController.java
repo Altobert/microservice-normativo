@@ -22,8 +22,18 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 @RestController
 @RequestMapping("/api/search")
+@Tag(name = "Búsqueda de Documentos", description = "API para realizar búsquedas en el índice de documentos normativos")
 public class SearchController {
     
     @Value("${lucene.index.directory:path/to/index}")
@@ -32,10 +42,60 @@ public class SearchController {
     /**
      * Busca documentos en el índice de Lucene
      */
+    @Operation(
+        summary = "Buscar documentos",
+        description = "Realiza una búsqueda de texto completo en el índice de documentos normativos"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Búsqueda realizada exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "query": "IVA",
+                      "field": "content",
+                      "limit": 10,
+                      "totalResults": 2,
+                      "results": [
+                        {
+                          "score": 1.2345955,
+                          "filename": "documento.pdf",
+                          "title": "Título del documento",
+                          "filepath": "/ruta/al/archivo.pdf",
+                          "year": "2020",
+                          "documentId": "ID1302",
+                          "size": "563916",
+                          "lastModified": "1728443774000",
+                          "snippet": "Contenido del documento..."
+                        }
+                      ]
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error en la búsqueda",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "error": "Error en la búsqueda",
+                      "message": "Mensaje de error específico"
+                    }
+                    """)
+            )
+        )
+    })
     @GetMapping("/documents")
     public ResponseEntity<Map<String, Object>> searchDocuments(
+            @Parameter(description = "Término de búsqueda", required = true, example = "IVA")
             @RequestParam String query,
+            @Parameter(description = "Número máximo de resultados", example = "10")
             @RequestParam(defaultValue = "10") int limit,
+            @Parameter(description = "Campo a buscar", example = "content")
             @RequestParam(defaultValue = "content") String field) {
         
         try {
@@ -161,6 +221,48 @@ public class SearchController {
     /**
      * Obtiene estadísticas del índice
      */
+    @Operation(
+        summary = "Obtener estadísticas del índice",
+        description = "Retorna información estadística sobre los documentos indexados en el sistema"
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Estadísticas obtenidas exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "totalDocuments": 1170,
+                      "indexDirectory": "path/to/index",
+                      "timestamp": 1757910350026,
+                      "documentsByYear": {
+                        "2019": 44,
+                        "2018": 55,
+                        "2017": 77,
+                        "2016": 352,
+                        "2024": 66,
+                        "2021": 242,
+                        "2020": 308
+                      }
+                    }
+                    """)
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error al obtener estadísticas",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "error": "Error al obtener estadísticas",
+                      "message": "Mensaje de error específico"
+                    }
+                    """)
+            )
+        )
+    })
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getIndexStats() {
         try {
