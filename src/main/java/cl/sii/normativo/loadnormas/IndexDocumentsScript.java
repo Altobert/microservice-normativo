@@ -1,21 +1,12 @@
 package cl.sii.normativo.loadnormas;
 
 import cl.sii.normativo.loadnormas.services.BulkIndexerService;
-import cl.sii.normativo.loadnormas.services.PDFTextExtractor;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
-import java.io.File;
-import java.util.List;
-
-@SpringBootApplication
+@Configuration
 public class IndexDocumentsScript {
-    
-    public static void main(String[] args) {
-        SpringApplication.run(IndexDocumentsScript.class, args);
-    }
     
     @Bean
     public CommandLineRunner indexDocuments(BulkIndexerService bulkIndexerService) {

@@ -33,11 +33,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import lombok.extern.slf4j.Slf4j;
-
-
 @SpringBootTest
-@Slf4j
 class LoadnormasApplicationTests  {
 
   private Directory indexDirectory;
@@ -68,12 +64,12 @@ class LoadnormasApplicationTests  {
             for (ScoreDoc hit : results.scoreDocs) {
                 Document doc = searcher.doc(hit.doc);
                 ResponseLuceneCorpus response = new ResponseLuceneCorpus();                
-                response.setContent(doc.get("content"));
+                // response.setContent(doc.get("content")); // Método no disponible
                 responseList.add(response);
             }
             // show results
-            log.info("Documentos a buscar con texto completo: "+queryStr);
-            log.info("Resultados encontrados: "+results.totalHits.toString());
+            System.out.println("Documentos a buscar con texto completo: "+queryStr);
+            System.out.println("Resultados encontrados: "+results.totalHits.toString());
 
         } catch (IOException | ParseException e) {
             throw new Exception("Error during search operation", e);
@@ -111,7 +107,7 @@ class LoadnormasApplicationTests  {
 
             Query query = parser.parse("iva");
             ScoreDoc[] hits = searcher.search(query, 10).scoreDocs;
-            log.info("Number of hits: {}", hits.length);
+            System.out.println("Number of hits: " + hits.length);
             //assertEquals(1, hits.length);
             //assertEquals("1", searcher.doc(hits[0].doc).get("id"));
             assertEquals("1", searcher.storedFields().document(hits[0].doc).get("id"));
