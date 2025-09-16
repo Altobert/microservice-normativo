@@ -1,6 +1,6 @@
 # 🔍 Microservicio de Búsqueda de Documentos Normativos SII
 
-Microservicio especializado en búsqueda de texto completo de documentos normativos del Servicio de Impuestos Internos (SII) utilizando Apache Lucene. Este servicio se enfoca exclusivamente en proporcionar capacidades de búsqueda sobre índices previamente creados.
+Microservicio especializado en búsqueda de documentos normativos del Servicio de Impuestos Internos (SII) utilizando **Apache Lucene con búsqueda híbrida** (tradicional + vectorial). Este servicio combina búsqueda por términos exactos con búsqueda por similitud semántica para obtener resultados más precisos y relevantes.
 
 ## 🚀 **Inicio Rápido**
 
@@ -23,6 +23,7 @@ Toda la documentación está organizada en la carpeta `docs/`:
 
 - **[📖 Documentación Principal](docs/README.md)** - Índice completo de toda la documentación
 - **[🛠️ Soluciones](docs/soluciones/)** - Soluciones implementadas para problemas específicos
+- **[🚀 Búsqueda Vectorial Híbrida](docs/soluciones/BUSQUEDA_VECTORIAL_HIBRIDA.md)** - Sistema de búsqueda híbrida (tradicional + vectorial)
 - **[📊 Sistema de Evaluación](docs/soluciones/SISTEMA_EVALUACION_METRICAS.md)** - Evaluación de rendimiento con métricas
 - **[📜 Scripts](docs/scripts/)** - Scripts de automatización y utilidades
 - **[🔌 API](docs/api/)** - Documentación de la API y Swagger
@@ -35,17 +36,59 @@ Toda la documentación está organizada en la carpeta `docs/`:
 - ✅ **API Swagger disponible**
 - ✅ **Separación completa del pipeline de indexación**
 - ✅ **Enfoque exclusivo en búsquedas**
-- ✅ **Sistema de evaluación de rendimiento implementado**
-- ✅ **Métricas de calidad de búsqueda automatizadas**
+- ✅ **🚀 Búsqueda híbrida implementada (tradicional + vectorial)**
+- ✅ **🧠 Búsqueda inteligente con pesos automáticos**
+- ✅ **📊 Sistema de evaluación de rendimiento implementado**
+- ✅ **🔧 Métricas de calidad de búsqueda automatizadas**
 
 ## 🔗 **Endpoints Principales**
 
+### Búsqueda Tradicional
+- **Búsqueda básica**: `http://localhost:8080/api/search/documents?query=impuesto`
+- **Búsqueda por año**: `http://localhost:8080/api/search/documents/year/2020?query=impuesto`
+- **Estadísticas**: `http://localhost:8080/api/search/stats`
+
+### 🚀 Búsqueda Híbrida (NUEVO)
+- **Búsqueda híbrida**: `http://localhost:8080/api/search/hybrid?query=impuestos&limit=10&traditionalWeight=0.6&vectorWeight=0.4`
+- **Búsqueda inteligente**: `http://localhost:8080/api/search/smart-hybrid?query=impuestos sobre la renta&limit=10`
+- **Estadísticas híbridas**: `http://localhost:8080/api/search/hybrid-stats`
+
+### Sistema
 - **Health Check**: `http://localhost:8080/actuator/health`
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
 - **API Docs**: `http://localhost:8080/api-docs`
-- **Búsqueda**: `http://localhost:8080/api/search/documents?query=impuesto`
-- **Búsqueda por año**: `http://localhost:8080/api/search/documents/year/2020?query=impuesto`
-- **Estadísticas**: `http://localhost:8080/api/search/stats`
+
+## 🚀 **Búsqueda Vectorial Híbrida**
+
+El microservicio ahora incluye capacidades de **búsqueda híbrida** que combina:
+
+- **🔍 Búsqueda tradicional**: Por términos exactos usando TF-IDF
+- **🧠 Búsqueda vectorial**: Por similitud semántica usando embeddings
+- **⚖️ Combinación inteligente**: Con pesos configurables y automáticos
+
+### Características Principales
+
+- **Pesos automáticos**: Ajusta automáticamente los pesos según el tipo de consulta
+- **Cache de embeddings**: Optimiza el rendimiento evitando regeneración
+- **Fallback inteligente**: Usa embeddings simples cuando no hay modelos de IA
+- **Scoring híbrido**: Combina scores de ambos tipos de búsqueda
+- **Metadatos detallados**: Información completa sobre cada tipo de match
+
+### Scripts de Prueba
+
+```bash
+# Probar búsqueda híbrida
+./test-hybrid-search.sh
+
+# Pruebas específicas
+./test-hybrid-search.sh --test hybrid
+./test-hybrid-search.sh --test smart
+
+# 🌐 Pruebas en Swagger UI
+./test-swagger-hybrid.sh --auto          # Pruebas automáticas
+./test-swagger-hybrid.sh --open          # Abrir Swagger UI
+./test-swagger-hybrid.sh --examples      # Ver ejemplos de consultas
+```
 
 ## 📊 **Sistema de Evaluación de Rendimiento**
 

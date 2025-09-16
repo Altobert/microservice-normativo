@@ -11,9 +11,13 @@ import org.apache.lucene.search.ScoreDoc;
 import org.apache.lucene.search.TopDocs;
 import org.apache.lucene.store.Directory;
 import org.apache.lucene.store.FSDirectory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import cl.sii.normativo.loadnormas.services.HybridSearchService;
+import cl.sii.normativo.loadnormas.services.VectorIndexerService;
 
 import java.io.IOException;
 import java.nio.file.Paths;
@@ -37,6 +41,12 @@ public class SearchController {
     
     @Value("${lucene.index.directory:path/to/index}")
     private String indexDir;
+    
+    @Autowired
+    private HybridSearchService hybridSearchService;
+    
+    @Autowired
+    private VectorIndexerService vectorIndexerService;
     
     /**
      * Busca documentos en el índice de Lucene
@@ -226,6 +236,304 @@ public class SearchController {
         
         System.out.println("Búsqueda completada - " + results.size() + " resultados procesados");
         return results;
+    }
+    
+    /**
+     * Búsqueda híbrida que combina búsqueda tradicional y vectorial
+     */
+    @Operation(
+        summary = "Búsqueda híbrida",
+        description = """
+            Realiza una búsqueda que combina búsqueda tradicional por términos exactos y búsqueda vectorial por similitud semántica.
+            
+            **Casos de uso recomendados:**
+            - Consultas específicas: traditionalWeight=0.7, vectorWeight=0.3
+            - Consultas semánticas: traditionalWeight=0.3, vectorWeight=0.7
+            - Consultas balanceadas: traditionalWeight=0.5, vectorWeight=0.5
+            
+            **Tipos de match:**
+            - `traditional`: Solo encontrado en búsqueda tradicional
+            - `vector`: Solo encontrado en búsqueda vectorial
+            - `hybrid`: Encontrado en ambas búsquedas
+            """
+    )
+    @ApiResponses(value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Búsqueda híbrida realizada exitosamente",
+            content = @Content(
+                mediaType = "application/json",
+                examples = {
+                    @ExampleObject(
+                        name = "Consulta específica (más peso tradicional)",
+                        summary = "Búsqueda con más peso en términos exactos",
+                        value = """
+                            {
+                              "query": "IVA",
+                              "limit": 5,
+                              "traditionalWeight": 0.7,
+                              "vectorWeight": 0.3,
+                              "totalResults": 2,
+                              "results": [
+                                {
+                                  "documentId": "ID1302",
+                                  "filename": "Circular_IVA_2024.pdf",
+                                  "title": "Circular sobre IVA",
+                                  "year": "2024",
+                                  "traditionalScore": 2.5,
+                                  "vectorScore": 0.8,
+                                  "hybridScore": 1.99,
+                                  "matchType": "hybrid",
+                                  "snippet": "El Impuesto al Valor Agregado (IVA) se aplica sobre..."
+                                }
+                              ]
+                            }
+                            """
+                    ),
+                    @ExampleObject(
+                        name = "Consulta semántica (más peso vectorial)",
+                        summary = "Búsqueda con más peso en similitud semántica",
+                        value = """
+                            {
+                              "query": "impuestos sobre la renta de personas naturales",
+                              "limit": 10,
+                              "traditionalWeight": 0.3,
+                              "vectorWeight": 0.7,
+                              "totalResults": 4,
+                              "results": [
+                                {
+                                  "documentId": "ID1501",
+                                  "filename": "Ley_Renta_Personas.pdf",
+                                  "title": "Ley de Impuesto a la Renta",
+                                  "year": "2023",
+                                  "traditionalScore": 0.5,
+                                  "vectorScore": 1.8,
+                                  "hybridScore": 1.41,
+                                  "matchType": "hybrid",
+                                  "snippet": "El impuesto a la renta de las personas naturales se determina..."
+                                }
+                              ]
+                            }
+                            """
+                    ),
+                    @ExampleObject(
+                        name = "Consulta balanceada",
+                        summary = "Búsqueda con pesos equilibrados",
+                        value = """
+                            {
+                              "query": "obligaciones tributarias",
+                              "limit": 8,
+                              "traditionalWeight": 0.5,
+                              "vectorWeight": 0.5,
+                              "totalResults": 3,
+                              "results": [
+                                {
+                                  "documentId": "ID2001",
+                                  "filename": "Obligaciones_Tributarias.pdf",
+                                  "title": "Guía de Obligaciones Tributarias",
+                                  "year": "2024",
+                                  "traditionalScore": 1.2,
+                                  "vectorScore": 1.1,
+                                  "hybridScore": 1.15,
+                                  "matchType": "hybrid",
+                                  "snippet": "Las obligaciones tributarias incluyen la declaración y pago..."
+                                }
+                              ]
+                            }
+                            """
+                    )
+                }
+            )
+        ),
+        @ApiResponse(
+            responseCode = "500",
+            description = "Error en la búsqueda híbrida",
+            content = @Content(
+                mediaType = "application/json",
+                examples = @ExampleObject(value = """
+                    {
+                      "error": "Error en la búsqueda híbrida",
+                      "message": "Mensaje de error específico"
+                    }
+                    """)
+            )
+        )
+    })
+    @GetMapping("/hybrid")
+    public ResponseEntity<Map<String, Object>> hybridSearch(
+            @Parameter(description = "Consulta de búsqueda", required = true, example = "impuestos sobre la renta")
+            @RequestParam String query,
+            @Parameter(description = "Número máximo de resultados", example = "10")
+            @RequestParam(defaultValue = "10") int limit,
+            @Parameter(description = "Peso para búsqueda tradicional (0.0-1.0)", example = "0.6")
+            @RequestParam(defaultValue = "0.6") double traditionalWeight,
+            @Parameter(description = "Peso para búsqueda vectorial (0.0-1.0)", example = "0.4")
+            @RequestParam(defaultValue = "0.4") double vectorWeight) {
+        
+        System.out.println("Iniciando búsqueda híbrida - Query: '" + query + "', Límite: " + limit + 
+                         ", Pesos - Tradicional: " + traditionalWeight + ", Vectorial: " + vectorWeight);
+        
+        try {
+            List<HybridSearchService.HybridSearchResult> results = hybridSearchService.hybridSearch(
+                query, limit, traditionalWeight, vectorWeight);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("query", query);
+            response.put("limit", limit);
+            response.put("traditionalWeight", traditionalWeight);
+            response.put("vectorWeight", vectorWeight);
+            response.put("totalResults", results.size());
+            
+            // Convertir resultados a formato de respuesta
+            List<Map<String, Object>> formattedResults = new ArrayList<>();
+            for (HybridSearchService.HybridSearchResult result : results) {
+                Map<String, Object> formattedResult = new HashMap<>();
+                formattedResult.put("documentId", result.getDocumentId());
+                formattedResult.put("filename", result.getFilename());
+                formattedResult.put("title", result.getTitle());
+                formattedResult.put("year", result.getYear());
+                formattedResult.put("traditionalScore", result.getTraditionalScore());
+                formattedResult.put("vectorScore", result.getVectorScore());
+                formattedResult.put("hybridScore", result.getHybridScore());
+                formattedResult.put("matchType", result.getMatchType());
+                
+                // Mostrar snippet del contenido
+                String content = result.getContent();
+                if (content != null && content.length() > 200) {
+                    formattedResult.put("snippet", content.substring(0, 200) + "...");
+                } else {
+                    formattedResult.put("snippet", content);
+                }
+                
+                formattedResults.add(formattedResult);
+            }
+            
+            response.put("results", formattedResults);
+            
+            System.out.println("Búsqueda híbrida completada exitosamente - " + results.size() + 
+                             " resultados encontrados para query: '" + query + "'");
+            return ResponseEntity.ok(response);
+            
+        } catch (IOException | ParseException e) {
+            System.out.println("Error durante la búsqueda híbrida - Query: '" + query + "' - " + e.getMessage());
+            return createErrorResponse("Error en la búsqueda híbrida", e.getMessage());
+        }
+    }
+    
+    /**
+     * Búsqueda híbrida inteligente con pesos automáticos
+     */
+    @Operation(
+        summary = "Búsqueda híbrida inteligente",
+        description = """
+            Realiza una búsqueda híbrida con pesos automáticos basados en las características de la consulta.
+            
+            **Algoritmo de pesos automáticos:**
+            - Consultas cortas (≤50 chars): traditionalWeight=0.6, vectorWeight=0.4
+            - Consultas largas (>50 chars): traditionalWeight=0.4, vectorWeight=0.6
+            - Palabras muy cortas (≤3 chars): traditionalWeight=0.7, vectorWeight=0.3
+            
+            **Ventajas:**
+            - No requiere configuración manual de pesos
+            - Se adapta automáticamente al tipo de consulta
+            - Optimiza resultados según el contexto
+            """
+    )
+    @GetMapping("/smart-hybrid")
+    public ResponseEntity<Map<String, Object>> smartHybridSearch(
+            @Parameter(description = "Consulta de búsqueda", required = true, example = "impuestos sobre la renta")
+            @RequestParam String query,
+            @Parameter(description = "Número máximo de resultados", example = "10")
+            @RequestParam(defaultValue = "10") int limit) {
+        
+        System.out.println("Iniciando búsqueda híbrida inteligente - Query: '" + query + "', Límite: " + limit);
+        
+        try {
+            List<HybridSearchService.HybridSearchResult> results = hybridSearchService.smartHybridSearch(query, limit);
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("query", query);
+            response.put("limit", limit);
+            response.put("searchType", "smart-hybrid");
+            response.put("totalResults", results.size());
+            
+            // Convertir resultados a formato de respuesta
+            List<Map<String, Object>> formattedResults = new ArrayList<>();
+            for (HybridSearchService.HybridSearchResult result : results) {
+                Map<String, Object> formattedResult = new HashMap<>();
+                formattedResult.put("documentId", result.getDocumentId());
+                formattedResult.put("filename", result.getFilename());
+                formattedResult.put("title", result.getTitle());
+                formattedResult.put("year", result.getYear());
+                formattedResult.put("traditionalScore", result.getTraditionalScore());
+                formattedResult.put("vectorScore", result.getVectorScore());
+                formattedResult.put("hybridScore", result.getHybridScore());
+                formattedResult.put("matchType", result.getMatchType());
+                
+                // Mostrar snippet del contenido
+                String content = result.getContent();
+                if (content != null && content.length() > 200) {
+                    formattedResult.put("snippet", content.substring(0, 200) + "...");
+                } else {
+                    formattedResult.put("snippet", content);
+                }
+                
+                formattedResults.add(formattedResult);
+            }
+            
+            response.put("results", formattedResults);
+            
+            System.out.println("Búsqueda híbrida inteligente completada - " + results.size() + 
+                             " resultados encontrados para query: '" + query + "'");
+            return ResponseEntity.ok(response);
+            
+        } catch (IOException | ParseException e) {
+            System.out.println("Error durante la búsqueda híbrida inteligente - Query: '" + query + "' - " + e.getMessage());
+            return createErrorResponse("Error en la búsqueda híbrida inteligente", e.getMessage());
+        }
+    }
+    
+    /**
+     * Obtiene estadísticas del sistema de búsqueda híbrida
+     */
+    @Operation(
+        summary = "Estadísticas del sistema híbrido",
+        description = """
+            Retorna información detallada sobre el estado del sistema de búsqueda híbrida.
+            
+            **Información incluida:**
+            - Estado del servicio de embeddings
+            - Tamaño del cache de embeddings
+            - Estadísticas del índice vectorial
+            - Configuración del directorio de índice
+            - Campos soportados para búsqueda
+            
+            **Útil para:**
+            - Monitoreo del sistema
+            - Diagnóstico de problemas
+            - Optimización de rendimiento
+            """
+    )
+    @GetMapping("/hybrid-stats")
+    public ResponseEntity<Map<String, Object>> getHybridStats() {
+        System.out.println("Solicitando estadísticas del sistema híbrido");
+        
+        try {
+            Map<String, Object> hybridStats = hybridSearchService.getSearchStats();
+            Map<String, Object> vectorStats = vectorIndexerService.getIndexStats();
+            
+            Map<String, Object> response = new HashMap<>();
+            response.put("hybridSearch", hybridStats);
+            response.put("vectorIndexer", vectorStats);
+            response.put("timestamp", System.currentTimeMillis());
+            
+            System.out.println("Estadísticas del sistema híbrido generadas exitosamente");
+            return ResponseEntity.ok(response);
+            
+        } catch (Exception e) {
+            System.out.println("Error al obtener estadísticas del sistema híbrido - " + e.getMessage());
+            return createErrorResponse("Error al obtener estadísticas del sistema híbrido", e.getMessage());
+        }
     }
     
     /**

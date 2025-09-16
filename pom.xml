@@ -79,7 +79,19 @@
 			<artifactId>lucene-backward-codecs</artifactId>
 			<version>9.6.0</version>
 		</dependency>
-		
+
+		<!-- Dependencias adicionales para búsqueda híbrida -->
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-text</artifactId>
+			<version>1.10.0</version>
+		</dependency>
+
+		<!-- Jakarta Bean Validation -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-validation</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
