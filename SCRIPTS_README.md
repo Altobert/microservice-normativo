@@ -49,6 +49,49 @@ Script para detener el microservicio de forma segura.
 - ✅ Verificación de que la aplicación se detuvo correctamente
 - ✅ Soporte para múltiples instancias
 
+### 🧪 `test-microservice.sh` - Pruebas Completas
+
+Script completo para probar todas las funcionalidades del microservicio.
+
+**Uso básico:**
+```bash
+./test-microservice.sh
+```
+
+**Opciones avanzadas:**
+```bash
+./test-microservice.sh --help      # Mostrar ayuda
+./test-microservice.sh --quick     # Solo pruebas básicas
+./test-microservice.sh --verbose   # Output detallado
+./test-microservice.sh --url http://localhost:8081  # URL diferente
+```
+
+**Características:**
+- ✅ 21+ pruebas diferentes cubriendo todos los endpoints
+- ✅ Verificación de conectividad y salud del servicio
+- ✅ Pruebas de búsqueda básica y avanzada
+- ✅ Validación de manejo de errores
+- ✅ Pruebas de rendimiento y tiempo de respuesta
+- ✅ Verificación de documentación API y Swagger UI
+- ✅ Análisis estadístico de resultados
+- ✅ Reporte detallado con colores y métricas
+
+### ⚡ `quick-test.sh` - Pruebas Rápidas
+
+Script para verificaciones rápidas del estado del microservicio.
+
+**Uso:**
+```bash
+./quick-test.sh
+```
+
+**Características:**
+- ✅ Verificación rápida de conectividad (5s timeout)
+- ✅ Validación básica de funcionalidades principales
+- ✅ Pruebas de búsqueda esenciales
+- ✅ Verificación de documentación disponible
+- ✅ Resumen ejecutivo del estado del servicio
+
 ## 🔧 Requisitos del Sistema
 
 ### Software Necesario
@@ -76,7 +119,19 @@ Los scripts verifican automáticamente:
 - Realizar búsquedas: http://localhost:8080/api/search/documents?query=IVA
 - Ver estadísticas: http://localhost:8080/api/search/stats
 
-### 3. Detener la Aplicación
+### 3. Probar la Aplicación
+```bash
+# Pruebas rápidas (recomendado para verificación básica)
+./quick-test.sh
+
+# Pruebas completas (recomendado para validación completa)
+./test-microservice.sh
+
+# Pruebas con output detallado
+./test-microservice.sh --verbose
+```
+
+### 4. Detener la Aplicación
 ```bash
 # Terminación suave (recomendado)
 ./stop-app.sh
