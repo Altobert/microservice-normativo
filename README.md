@@ -23,6 +23,7 @@ Toda la documentación está organizada en la carpeta `docs/`:
 
 - **[📖 Documentación Principal](docs/README.md)** - Índice completo de toda la documentación
 - **[🛠️ Soluciones](docs/soluciones/)** - Soluciones implementadas para problemas específicos
+- **[📊 Sistema de Evaluación](docs/soluciones/SISTEMA_EVALUACION_METRICAS.md)** - Evaluación de rendimiento con métricas
 - **[📜 Scripts](docs/scripts/)** - Scripts de automatización y utilidades
 - **[🔌 API](docs/api/)** - Documentación de la API y Swagger
 - **[📖 Guías](docs/guias/)** - Guías de uso y procedimientos
@@ -34,6 +35,8 @@ Toda la documentación está organizada en la carpeta `docs/`:
 - ✅ **API Swagger disponible**
 - ✅ **Separación completa del pipeline de indexación**
 - ✅ **Enfoque exclusivo en búsquedas**
+- ✅ **Sistema de evaluación de rendimiento implementado**
+- ✅ **Métricas de calidad de búsqueda automatizadas**
 
 ## 🔗 **Endpoints Principales**
 
@@ -44,12 +47,46 @@ Toda la documentación está organizada en la carpeta `docs/`:
 - **Búsqueda por año**: `http://localhost:8080/api/search/documents/year/2020?query=impuesto`
 - **Estadísticas**: `http://localhost:8080/api/search/stats`
 
+## 📊 **Sistema de Evaluación de Rendimiento**
+
+El microservicio incluye un sistema completo de evaluación de rendimiento que permite medir objetivamente la calidad de los resultados de búsqueda:
+
+### Métricas Implementadas
+- **Precision**: Precisión de resultados positivos (TP / (TP + FP))
+- **Recall**: Completitud de resultados (TP / (TP + FN))
+- **F1-Score**: Balance entre precision y recall
+- **Accuracy**: Precisión general del sistema
+
+### Scripts de Evaluación
+```bash
+# Benchmark completo del sistema
+./benchmark-search-system.sh
+
+# Pruebas de métricas de evaluación
+./test-evaluation-metrics.sh
+
+# Pruebas del microservicio
+./test-microservice.sh
+```
+
+### Resultados Actuales
+- **Precision**: 10.81% (Identifica necesidad de mejorar filtrado)
+- **Recall**: 50.00% (Encuentra la mitad de documentos relevantes)
+- **F1-Score**: 17.78% (Balance que requiere optimización)
+- **Accuracy**: 85.77% (Sistema preciso en general)
+
+### Documentación
+- **[Sistema de Evaluación Completo](docs/soluciones/SISTEMA_EVALUACION_METRICAS.md)**
+- **[README de Pruebas de Cobertura](src/main/java/cl/sii/normativo/loadnormas/pruebascobertura/README.md)**
+
 ## 🛠️ **Tecnologías**
 
 - **Java 17**
 - **Spring Boot 3.4.5**
 - **Apache Lucene 9.6.0**
 - **SpringDoc OpenAPI 3**
+- **JUnit 5** (Pruebas unitarias e integración)
+- **Maven** (Gestión de dependencias)
 
 ## 🏗️ **Arquitectura**
 
