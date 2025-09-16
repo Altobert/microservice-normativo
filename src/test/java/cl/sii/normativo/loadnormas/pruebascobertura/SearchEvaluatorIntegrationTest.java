@@ -56,9 +56,9 @@ class SearchEvaluatorIntegrationTest {
         relevantIds.add("ID041");
         
         SearchEvaluator.TestQuery testQuery = new SearchEvaluator.TestQuery(
-            "IVA",
+            "compra de productos en el exterior",
             relevantIds,
-            "Búsqueda de documentos sobre IVA"
+            "Búsqueda de documentos sobre compra de productos en el exterior"
         );
 
         // When

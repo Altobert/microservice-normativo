@@ -23,7 +23,7 @@ class EmbeddingServiceTest {
     @Test
     @DisplayName("Debería generar embedding para texto válido")
     void testGenerateEmbeddingValidText() {
-        String text = "impuestos sobre la renta";
+        String text = "compra de productos en el exterior";
         Map<String, Double> embedding = embeddingService.generateEmbedding(text);
         
         assertNotNull(embedding);
