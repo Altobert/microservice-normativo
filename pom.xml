@@ -12,7 +12,7 @@
 	<artifactId>loadnormas</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>loadnormas</name>
-	<description>proyecto que permite buscar proyectos normativos de acuerdo a texto completo y ademas experimienta con chatIA</description>
+	<description>Microservicio de búsqueda de documentos normativos SII - Proporciona API REST para búsquedas de texto completo en índices Lucene</description>
 	<url/>
 	<licenses>
 		<license/>
@@ -41,93 +41,44 @@
 			<artifactId>spring-boot-starter-actuator</artifactId>
 		</dependency>
 		
-		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-core -->
-
-		<!-- lombok -->
+		<!-- Lombok -->
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
-			<version>1.18.28</version>
+			<version>1.18.30</version>
 			<scope>provided</scope>
 		</dependency>
 
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-queryparser</artifactId>
-			<version>9.6.0</version>
-			</dependency>
-
-			<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-analysis-common</artifactId>
-			<version>9.6.0</version>
-			</dependency
-			>
-			<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-test-framework</artifactId>
-			<version>9.6.0</version>
-			<scope>test</scope>
-		</dependency>
-
-			<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-codecs</artifactId>
-			<version>9.6.0</version>
-			</dependency>
-
-			<dependency>
-				<groupId>org.apache.lucene</groupId>
-				<artifactId>lucene-backward-codecs</artifactId>
-				<version>9.6.0</version> <!-- If using backward-compatible codecs -->
-            </dependency>
-
-
-		<!--
-			https://mvnrepository.com/artifact/org.apache.lucene/lucene-core 
-			
-		-->
-		<!--
+		<!-- Apache Lucene Dependencies - Solo para búsquedas -->
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-core</artifactId>
 			<version>9.6.0</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-queryparser</artifactId>
-			<version>9.0.0</version>
+			<version>9.6.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-analysis-common</artifactId>
-			<version>9.0.0</version>
-		</dependency>
-
-		<dependency>
-			<groupId>org.apache.lucene</groupId>
-			<artifactId>lucene-test-framework</artifactId>
-			<version>9.0.0</version>
-			<scope>test</scope>
+			<version>9.6.0</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.apache.lucene</groupId>
 			<artifactId>lucene-codecs</artifactId>
-			<version>9.0.0</version> 
+			<version>9.6.0</version>
 		</dependency>
-		-->
-		
 
 		<dependency>
-			<groupId>org.apache.pdfbox</groupId>
-			<artifactId>pdfbox</artifactId>
-			<version>2.0.25</version>
+			<groupId>org.apache.lucene</groupId>
+			<artifactId>lucene-backward-codecs</artifactId>
+			<version>9.6.0</version>
 		</dependency>
-		
-		<!-- https://mvnrepository.com/artifact/org.apache.lucene/lucene-queryparser -->
 		
 
 		<dependency>

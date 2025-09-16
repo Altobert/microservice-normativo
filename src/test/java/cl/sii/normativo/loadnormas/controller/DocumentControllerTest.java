@@ -1,147 +1,152 @@
 package cl.sii.normativo.loadnormas.controller;
 
-import cl.sii.normativo.loadnormas.services.LuceneIndexer;
-import cl.sii.normativo.loadnormas.services.PDFTextExtractor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.MockedStatic;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.mock.web.MockMultipartFile;
-import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class DocumentControllerTest {
 
-    @Mock
-    private LuceneIndexer luceneIndexer;
-
     @InjectMocks
     private DocumentController documentController;
 
-    private MockMultipartFile mockFile;
-
-    @BeforeEach
-    void setUp() {
-        // Crear un archivo PDF simulado
-        String pdfContent = "Este es un documento de prueba con contenido de ejemplo.";
-        mockFile = new MockMultipartFile(
-                "file",
-                "test-document.pdf",
-                "application/pdf",
-                pdfContent.getBytes(StandardCharsets.UTF_8)
-        );
-    }
-
     @Test
-    void testUploadPDF_Success() throws Exception {
-        // Arrange
-        String extractedText = "Contenido extraído del PDF";
-        
-        try (MockedStatic<PDFTextExtractor> mockedExtractor = mockStatic(PDFTextExtractor.class)) {
-            mockedExtractor.when(() -> PDFTextExtractor.extractText(any(ByteArrayInputStream.class)))
-                    .thenReturn(extractedText);
-            
-            doNothing().when(luceneIndexer).indexFile(anyString(), anyString());
-
-            // Act
-            ResponseEntity<String> response = documentController.uploadPDF(mockFile);
-
-            // Assert
-            assertEquals(HttpStatus.OK, response.getStatusCode());
-            assertEquals("Documento indexado exitosamente.", response.getBody());
-            
-            verify(luceneIndexer).indexFile("test-document.pdf", extractedText);
-        }
-    }
-
-    @Test
-    void testUploadPDF_ExtractionError() throws Exception {
-        // Arrange
-        try (MockedStatic<PDFTextExtractor> mockedExtractor = mockStatic(PDFTextExtractor.class)) {
-            mockedExtractor.when(() -> PDFTextExtractor.extractText(any(ByteArrayInputStream.class)))
-                    .thenThrow(new Exception("Error al extraer texto del PDF"));
-
-            // Act
-            ResponseEntity<String> response = documentController.uploadPDF(mockFile);
-
-            // Assert
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertTrue(response.getBody().contains("Error al indexar el documento"));
-            assertTrue(response.getBody().contains("Error al extraer texto del PDF"));
-            
-            verify(luceneIndexer, never()).indexFile(anyString(), anyString());
-        }
-    }
-
-    @Test
-    void testUploadPDF_IndexingError() throws Exception {
-        // Arrange
-        String extractedText = "Contenido extraído del PDF";
-        
-        try (MockedStatic<PDFTextExtractor> mockedExtractor = mockStatic(PDFTextExtractor.class)) {
-            mockedExtractor.when(() -> PDFTextExtractor.extractText(any(ByteArrayInputStream.class)))
-                    .thenReturn(extractedText);
-            
-            doThrow(new IOException("Error al indexar")).when(luceneIndexer)
-                    .indexFile(anyString(), anyString());
-
-            // Act
-            ResponseEntity<String> response = documentController.uploadPDF(mockFile);
-
-            // Assert
-            assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-            assertTrue(response.getBody().contains("Error al indexar el documento"));
-            assertTrue(response.getBody().contains("Error al indexar"));
-        }
-    }
-
-    @Test
-    void testUploadPDF_EmptyFile() {
-        // Arrange
-        MockMultipartFile emptyFile = new MockMultipartFile(
-                "file",
-                "empty.pdf",
-                "application/pdf",
-                new byte[0]
-        );
-
+    void testGetServiceInfo() {
         // Act
-        ResponseEntity<String> response = documentController.uploadPDF(emptyFile);
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceInfo();
 
         // Assert
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().contains("Error al indexar el documento"));
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        
+        Map<String, Object> body = response.getBody();
+        assertEquals("Microservicio de Búsqueda de Documentos Normativos SII", body.get("service"));
+        assertEquals("1.0", body.get("version"));
+        assertEquals("Servicio especializado en búsquedas de texto completo en índices Lucene", body.get("description"));
+        assertNotNull(body.get("capabilities"));
+        assertNotNull(body.get("timestamp"));
+        
+        // Verificar que capabilities es un array con los elementos esperados
+        String[] capabilities = (String[]) body.get("capabilities");
+        assertEquals(4, capabilities.length);
+        assertTrue(java.util.Arrays.asList(capabilities).contains("Búsqueda de texto completo"));
+        assertTrue(java.util.Arrays.asList(capabilities).contains("Búsqueda por año"));
+        assertTrue(java.util.Arrays.asList(capabilities).contains("Búsqueda por ID de documento"));
+        assertTrue(java.util.Arrays.asList(capabilities).contains("Estadísticas del índice"));
     }
 
     @Test
-    void testUploadPDF_NullFile() {
-        // Arrange
-        MockMultipartFile nullFile = new MockMultipartFile(
-                "file",
-                "null.pdf",
-                "application/pdf",
-                new byte[0] // Usar array vacío en lugar de null
-        );
-
+    void testGetServiceStatus() {
         // Act
-        ResponseEntity<String> response = documentController.uploadPDF(nullFile);
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceStatus();
 
-        // Assert - Debe manejar el archivo vacío correctamente
-        assertEquals(HttpStatus.INTERNAL_SERVER_ERROR, response.getStatusCode());
-        assertTrue(response.getBody().contains("Error al indexar el documento"));
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        
+        Map<String, Object> body = response.getBody();
+        assertEquals("UP", body.get("status"));
+        assertEquals("search-service", body.get("service"));
+        assertNotNull(body.get("timestamp"));
+        
+        // Verificar que el timestamp es un número válido
+        assertTrue(body.get("timestamp") instanceof Number);
+        assertTrue(((Number) body.get("timestamp")).longValue() > 0);
+    }
+
+    @Test
+    void testServiceInfoResponseStructure() {
+        // Act
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceInfo();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        
+        Map<String, Object> body = response.getBody();
+        
+        // Verificar que todos los campos requeridos están presentes
+        assertTrue(body.containsKey("service"));
+        assertTrue(body.containsKey("version"));
+        assertTrue(body.containsKey("description"));
+        assertTrue(body.containsKey("capabilities"));
+        assertTrue(body.containsKey("timestamp"));
+        
+        // Verificar que no hay campos nulos
+        assertNotNull(body.get("service"));
+        assertNotNull(body.get("version"));
+        assertNotNull(body.get("description"));
+        assertNotNull(body.get("capabilities"));
+        assertNotNull(body.get("timestamp"));
+    }
+
+    @Test
+    void testServiceStatusResponseStructure() {
+        // Act
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceStatus();
+
+        // Assert
+        assertEquals(HttpStatus.OK, response.getStatusCode());
+        assertNotNull(response.getBody());
+        
+        Map<String, Object> body = response.getBody();
+        
+        // Verificar que todos los campos requeridos están presentes
+        assertTrue(body.containsKey("status"));
+        assertTrue(body.containsKey("service"));
+        assertTrue(body.containsKey("timestamp"));
+        
+        // Verificar que no hay campos nulos
+        assertNotNull(body.get("status"));
+        assertNotNull(body.get("service"));
+        assertNotNull(body.get("timestamp"));
+    }
+
+    @Test
+    void testServiceInfoContentValidation() {
+        // Act
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceInfo();
+
+        // Assert
+        Map<String, Object> body = response.getBody();
+        
+        // Verificar contenido específico
+        String service = (String) body.get("service");
+        assertTrue(service.contains("Microservicio de Búsqueda"));
+        assertTrue(service.contains("Documentos Normativos SII"));
+        
+        String description = (String) body.get("description");
+        assertTrue(description.contains("búsquedas de texto completo"));
+        assertTrue(description.contains("índices Lucene"));
+        
+        // Verificar que el timestamp es reciente (dentro de los últimos 5 segundos)
+        long timestamp = ((Number) body.get("timestamp")).longValue();
+        long currentTime = System.currentTimeMillis();
+        assertTrue(Math.abs(currentTime - timestamp) < 5000);
+    }
+
+    @Test
+    void testServiceStatusContentValidation() {
+        // Act
+        ResponseEntity<Map<String, Object>> response = documentController.getServiceStatus();
+
+        // Assert
+        Map<String, Object> body = response.getBody();
+        
+        // Verificar contenido específico
+        assertEquals("UP", body.get("status"));
+        assertEquals("search-service", body.get("service"));
+        
+        // Verificar que el timestamp es reciente (dentro de los últimos 5 segundos)
+        long timestamp = ((Number) body.get("timestamp")).longValue();
+        long currentTime = System.currentTimeMillis();
+        assertTrue(Math.abs(currentTime - timestamp) < 5000);
     }
 }

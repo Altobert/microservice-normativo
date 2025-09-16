@@ -1,6 +1,6 @@
-# 🏛️ Microservicio Normativo SII
+# 🔍 Microservicio de Búsqueda de Documentos Normativos SII
 
-Microservicio para búsqueda y gestión de documentos normativos del Servicio de Impuestos Internos (SII) utilizando Apache Lucene para indexación y búsqueda de texto completo.
+Microservicio especializado en búsqueda de texto completo de documentos normativos del Servicio de Impuestos Internos (SII) utilizando Apache Lucene. Este servicio se enfoca exclusivamente en proporcionar capacidades de búsqueda sobre índices previamente creados.
 
 ## 🚀 **Inicio Rápido**
 
@@ -9,10 +9,8 @@ Microservicio para búsqueda y gestión de documentos normativos del Servicio de
 mvn spring-boot:run -Dmaven.test.skip=true
 ```
 
-### Indexar documentos:
-```bash
-./docs/scripts/index-documents.sh
-```
+### Nota importante:
+Este servicio es solo para búsquedas. Para indexar documentos, usa el servicio pipeline separado.
 
 ### Acceder a Swagger UI:
 ```
@@ -32,34 +30,39 @@ Toda la documentación está organizada en la carpeta `docs/`:
 
 ## ✅ **Estado Actual**
 
-- ✅ **Aplicación funcionando correctamente**
-- ✅ **Sin cierres automáticos**
-- ✅ **104 documentos indexados**
+- ✅ **Servicio de búsqueda funcionando correctamente**
 - ✅ **API Swagger disponible**
-- ✅ **Indexación controlada**
+- ✅ **Separación completa del pipeline de indexación**
+- ✅ **Enfoque exclusivo en búsquedas**
 
 ## 🔗 **Endpoints Principales**
 
 - **Health Check**: `http://localhost:8080/actuator/health`
 - **Swagger UI**: `http://localhost:8080/swagger-ui.html`
 - **API Docs**: `http://localhost:8080/api-docs`
-- **Búsqueda**: `http://localhost:8080/api/documents/search?query=impuesto`
+- **Búsqueda**: `http://localhost:8080/api/search/documents?query=impuesto`
+- **Búsqueda por año**: `http://localhost:8080/api/search/documents/year/2020?query=impuesto`
+- **Estadísticas**: `http://localhost:8080/api/search/stats`
 
 ## 🛠️ **Tecnologías**
 
 - **Java 17**
 - **Spring Boot 3.4.5**
 - **Apache Lucene 9.6.0**
-- **Apache PDFBox 2.0.25**
 - **SpringDoc OpenAPI 3**
 
-## 📋 **Problema Principal Resuelto**
+## 🏗️ **Arquitectura**
 
-**El microservicio se cerraba automáticamente con "Graceful shutdown complete"**
+Este microservicio forma parte de una arquitectura de microservicios separada:
 
-**Solución**: Se comentaron las anotaciones `@SpringBootApplication` y `@Bean` en las clases de indexación para evitar ejecución automática.
+- **🔍 Este servicio**: Búsquedas de texto completo
+- **⚙️ Pipeline separado**: Indexación y procesamiento de documentos
 
-**Resultado**: ✅ La aplicación se mantiene ejecutándose correctamente sin cierres automáticos.
+**Beneficios de la separación**:
+- ✅ **Especialización**: Cada servicio tiene una responsabilidad específica
+- ✅ **Escalabilidad**: Servicios independientes pueden escalarse por separado
+- ✅ **Mantenibilidad**: Código más organizado y fácil de mantener
+- ✅ **Despliegue**: Despliegue independiente de servicios
 
 ---
 
